@@ -16,6 +16,13 @@ const UserSchema = new mongoose.Schema({
       "Please add a valid email",
     ],
   },
+  phoneNumber: {
+    type: String,
+    require: [true, "Please add an address"]
+  },
+  firebaseUid: {
+    type: String
+  },
   role: {
     type: String,
     enum: ["user", "admin"],
@@ -35,21 +42,21 @@ const UserSchema = new mongoose.Schema({
   },
 });
 
-UserSchema.pre("save", async function (next) {
+UserSchema.pre("save", async function(next) {
   const salt = await bcrypt.genSalt(10);
 
   this.password = await bcrypt.hash(this.password, salt);
 });
 
 // Sign JWT and return
-UserSchema.methods.getSignedJwtToken = function () {
+UserSchema.methods.getSignedJwtToken = function() {
   return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE,
   });
 };
 
 // Match user entered password to hashed password in database
-UserSchema.methods.matchPassword = async function (enteredPassword) {
+UserSchema.methods.matchPassword = async function(enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 

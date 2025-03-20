@@ -52,12 +52,17 @@ exports.login = async (req, res, next) => {
     return res.status(401).json({ success: false, msg: "Invalid credentials" });
   }
 
-  // Create token
-  //   const token = user.getSignedJwtToken();
-
-  //   res.status(200).json({ success: true, token });
   sendTokenResponse(user, 200, res);
 };
+
+
+exports.logout = async (req, res, next) => {
+  res.cookie('token', '', {
+    httpOnly: true,
+    expires: new Date(0) // Expire immediately
+  });
+  res.status(200).json({ message: 'Logged out successfully' });
+}
 
 // Get token from model, create cookie and send response
 const sendTokenResponse = (user, statusCode, res) => {
@@ -81,14 +86,3 @@ const sendTokenResponse = (user, statusCode, res) => {
   });
 };
 
-//@desc      Get current logged in user
-//@route     POST /api/v1/auth/me
-//@access    Private
-exports.getMe = async (req, res, next) => {
-  const user = await User.findById(req.user.id);
-
-  res.status(200).json({
-    success: true,
-    data: user,
-  });
-};
