@@ -165,6 +165,17 @@ exports.editReservation = async (req, res) => {
           message: "End time must be after start time.",
         });
       }
+      if (
+        !(
+          [0, 30].includes(newStartTime.getMinutes()) &&
+          [0, 30].includes(newEndTime.getMinutes())
+        )
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Start and end times must be on the hour or half-hour.",
+        });
+      }
       reservation.startTime = newStartTime;
       reservation.endTime = newEndTime;
     }
