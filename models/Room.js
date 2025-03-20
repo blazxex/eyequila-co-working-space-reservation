@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const RoomSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -8,15 +9,11 @@ const RoomSchema = new mongoose.Schema({
     ref: "WorkingSpace",
     require: true
   },
-  user: {
-    type: mongoose.Schema.ObjectId,
-    ref: "User",
-    require: true
-  },
   capacity: {
     type: Number,
     require: true,
-    default: 4
+    default: 4,
+    min: [1, "Capacity must be at least 1"]
   }
 },
   {
@@ -31,4 +28,4 @@ RoomSchema.virtual('Reservation', {
   foreignField: 'room',
   justOne: false
 })
-module.exports = mongoose.model("WorkingSpace", WorkingSpaceSchema);
+module.exports = mongoose.model("Room", RoomSchema);

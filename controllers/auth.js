@@ -6,12 +6,13 @@ const User = require("../models/User");
 
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, phonenumber, role } = req.body;
 
     // Create user
     const user = await User.create({
       name,
       email,
+      phonenumber,
       password,
       role,
     });
@@ -29,6 +30,7 @@ exports.register = async (req, res, next) => {
 // @route     POST /api/v1/auth/login
 // @access    Public
 exports.login = async (req, res, next) => {
+  // TODO : oauth
   const { email, password } = req.body;
 
   // Validate email & password

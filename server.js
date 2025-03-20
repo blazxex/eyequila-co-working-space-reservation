@@ -20,11 +20,10 @@ app.get("/", (req, res) => {
 });
 
 
-
-
 app.use('/api/v1/auth', auth);
-app.user('/api/v1/users', user);
+app.use('/api/v1/users', user);
 app.use('/api/v1/spaces', workingSpace);
+
 
 const PORT = process.env.PORT || 5000;
 const server = app.listen(

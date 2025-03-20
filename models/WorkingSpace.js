@@ -14,12 +14,14 @@ const WorkingSpaceSchema = new mongoose.Schema({
     require: [true, "Please add an address"]
   },
   openTime: {
-    type: Date,
+    type: String,
     required: [true, "Please add open time"],
+    default: "08:00"
   },
-  closeDate: {
-    type: Date,
+  closeTime: {
+    type: String,
     required: [true, "Please add close time"],
+    default: "20:00"
   }
 },
   {
@@ -34,5 +36,6 @@ WorkingSpaceSchema.virtual('Room', {
   foreignField: 'space',
   justOne: false
 })
+
 
 module.exports = mongoose.model("WorkingSpace", WorkingSpaceSchema);

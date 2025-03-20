@@ -1,6 +1,6 @@
 const express = require("express");
 const { getSpaces, getSpace } = require("../controllers/workingSpace");
-const room = rquire('../routes/room.js')
+const room = require('../routes/room.js')
 
 const router = express.Router();
 
