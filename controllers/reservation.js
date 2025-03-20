@@ -132,9 +132,52 @@ exports.createReservation = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
+
+// @desc    Update a reservation
+// @route   PUT /reservations/:reservationId
+// @access  Registered User (Owner) / Admin
 exports.editReservation = async (req, res) => {
-  return res.sendstatus(200);
+  try {
+    const { startTime, endTime } = req.body;
+    let reservation = await Reservation.findById(req.params.reservationId);
+
+    if (!reservation) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Reservation not found." });
+    }
+    if (
+      reservation.user.toString() !== req.user.id &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to update this reservation.",
+      });
+    }
+
+    if (startTime && endTime) {
+      const newStartTime = new Date(startTime);
+      const newEndTime = new Date(endTime);
+      if (newStartTime >= newEndTime) {
+        return res.status(400).json({
+          success: false,
+          message: "End time must be after start time.",
+        });
+      }
+      reservation.startTime = newStartTime;
+      reservation.endTime = newEndTime;
+    }
+
+    reservation = await reservation.save();
+    res.status(200).json({ success: true, data: reservation });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Cannot update reservation" });
+  }
 };
-exports.cancelReservation = async (req, res) => {
-  return res.sendstatus(200);
-};
+// @desc    Delete a reservation
+// @route   DELETE /reservations/:reservationId
+// @access  Registered User (Owner) / Admin
+exports.cancelReservation = async (req, res) => {};

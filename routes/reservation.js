@@ -12,10 +12,14 @@ const {
 
 const { protect, authorize } = require("../middleware/auth");
 
-router.route("/").get(protect, getReservations).post(createReservation);
+router
+  .route("/")
+  .get(protect, getReservations)
+  .post(protect, createReservation);
+
 router
   .route("/:id")
-  .get(getReservation)
+  .get(protect, getReservation)
   .put(editReservation)
   .delete(cancelReservation);
 
