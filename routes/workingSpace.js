@@ -1,10 +1,10 @@
 const express = require("express");
 const { getSpaces, getSpace } = require("../controllers/workingSpace");
-const room = require('../routes/room.js')
+const roomRouter = require('../routes/room.js')
 
 const router = express.Router();
 
-router.route('/:SpaceId/rooms/', room);
+router.use('/:spaceId/rooms/', roomRouter);
 
 router.route('/').get(getSpaces);
 router.route('/:id').get(getSpace);
