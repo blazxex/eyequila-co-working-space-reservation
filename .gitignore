@@ -1,0 +1,57 @@
+# npm
+node_modules/*
+package-lock.json
+npm-shrinkwrap.json
+*.log
+*.gz
+.env
+config/config.env
+# Coveralls
+.nyc_output
+coverage
+.DS_Store
+
+# Benchmarking
+benchmarks/graphs
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+
+# Local History for Visual Studio Code
+.history/
+
+# Built Visual Studio Code Extensions
+*.vsix
+# ignore additional files using core.excludesFile
+# https://git-scm.com/docs/gitignore# npm
+node_modules/*
+package-lock.json
+npm-shrinkwrap.json
+*.log
+*.gz
+.env
+config/config.env
+# Coveralls
+.nyc_output
+coverage
+.DS_Store
+
+# Benchmarking
+benchmarks/graphs
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+
+# Local History for Visual Studio Code
+.history/
+
+# Built Visual Studio Code Extensions
+*.vsix
+# ignore additional files using core.excludesFile
+# https://git-scm.com/docs/gitignore
