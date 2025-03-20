@@ -1,12 +1,59 @@
-const User = require('../models/User')
-const Space = require('../models/WorkingSpace')
+const Reservation = require("../models/Reservation");
+const Space = require("../models/WorkingSpace");
 
 exports.getReservations = async (req, res) => {
-  // TODO: dynamic data between user and admin req
-}
+  try {
+    let query;
+    const currentTime = new Date();
+
+    if (req.user.role !== "admin") {
+      query = Reservation.find({
+        user: req.user.id,
+        endTime: { $gt: currentTime },
+      }).populate("room");
+    } else {
+      query = Reservation.find({ endTime: { $gt: currentTime } }).populate(
+        "room"
+      );
+    }
+
+    const reservations = await query;
+    res
+      .status(200)
+      .json({ success: true, count: reservations.length, data: reservations });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Cannot retrieve reservations" });
+  }
+};
 exports.getReservation = async (req, res) => {
-  // TODO: dynamic data between user and admin req
-}
+  try {
+    const currentTime = new Date();
+    const reservation = await Reservation.findById(
+      req.params.reservationId
+    ).populate("room");
+    if (!reservation || reservation.endTime <= currentTime) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Reservation not found or expired." });
+    }
+    if (
+      reservation.user.toString() !== req.user.id &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to view this reservation.",
+      });
+    }
+    res.status(200).json({ success: true, data: reservation });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Cannot retrieve reservation" });
+  }
+};
 exports.createReservation = async (req, res) => {
   try {
     const { startTime, endTime } = req.body;
@@ -20,23 +67,28 @@ exports.createReservation = async (req, res) => {
     const newEndTime = new Date(endTime);
 
     if (newStartTime >= newEndTime) {
-      return res.status(400).json({ message: "End time must be after start time" });
+      return res
+        .status(400)
+        .json({ message: "End time must be after start time" });
     }
 
-    // ✅ 1️⃣ Validate Timeboxing (Must be full-hour slots)
+    // Validate Timeboxing (Must be full-hour slots)
     if (
-      newStartTime.getMinutes() !== 0 || newEndTime.getMinutes() !== 0 ||
-      (newEndTime - newStartTime) !== 60 * 60 * 1000
+      newStartTime.getMinutes() !== 0 ||
+      newEndTime.getMinutes() !== 0 ||
+      newEndTime - newStartTime !== 60 * 60 * 1000
     ) {
-      return res.status(400).json({ message: "Reservations must be in 1-hour slots (e.g., 12:00 - 13:00)" });
+      return res.status(400).json({
+        message: "Reservations must be in 1-hour slots (e.g., 12:00 - 13:00)",
+      });
     }
 
     // Check for Overlapping Reservations
     const overlappingReservation = await Reservation.findOne({
       roomId,
       $or: [
-        { startTime: { $lt: newEndTime }, endTime: { $gt: newStartTime } } // Overlapping condition
-      ]
+        { startTime: { $lt: newEndTime }, endTime: { $gt: newStartTime } }, // Overlapping condition
+      ],
     });
 
     if (overlappingReservation) {
@@ -58,7 +110,9 @@ exports.createReservation = async (req, res) => {
     workspaceClose.setHours(closeHour, closeMinute, 0, 0);
 
     if (newStartTime < workspaceOpen || newEndTime > workspaceClose) {
-      return res.status(400).json({ message: "Reservation must be within working hours" });
+      return res
+        .status(400)
+        .json({ message: "Reservation must be within working hours" });
     }
 
     // Save the Reservation
@@ -66,20 +120,21 @@ exports.createReservation = async (req, res) => {
       room: roomId,
       user: user.id,
       startTime: newStartTime,
-      endTime: newEndTime
+      endTime: newEndTime,
     });
     await newReservation.save();
 
-    return res.status(201).json({ message: "Reservation created successfully" });
-
+    return res
+      .status(201)
+      .json({ message: "Reservation created successfully" });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Server error" });
   }
-}
+};
 exports.editReservation = async (req, res) => {
   return res.sendstatus(200);
-}
+};
 exports.cancelReservation = async (req, res) => {
   return res.sendstatus(200);
-}
+};

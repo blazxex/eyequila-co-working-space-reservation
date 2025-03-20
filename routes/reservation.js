@@ -7,10 +7,16 @@ const {
   getReservations,
   getReservation,
   editReservation,
-  cancelReservation
-} = require('../controllers/reservation.js')
+  cancelReservation,
+} = require("../controllers/reservation.js");
 
-router.route('/').get(getReservations).post(createReservation);
-router.route('/:id').get(getReservation).put(editReservation).delete(cancelReservation);
+const { protect, authorize } = require("../middleware/auth");
+
+router.route("/").get(protect, getReservations).post(createReservation);
+router
+  .route("/:id")
+  .get(getReservation)
+  .put(editReservation)
+  .delete(cancelReservation);
 
 module.exports = router;
