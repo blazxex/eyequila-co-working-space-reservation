@@ -180,4 +180,30 @@ exports.editReservation = async (req, res) => {
 // @desc    Delete a reservation
 // @route   DELETE /reservations/:reservationId
 // @access  Registered User (Owner) / Admin
-exports.cancelReservation = async (req, res) => {};
+exports.cancelReservation = async (req, res) => {
+  try {
+    const reservation = await Reservation.findById(req.params.reservationId);
+    if (!reservation) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Reservation not found." });
+    }
+    if (
+      reservation.user.toString() !== req.user.id &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to delete this reservation.",
+      });
+    }
+    await reservation.deleteOne();
+    res
+      .status(200)
+      .json({ success: true, message: "Reservation deleted successfully." });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Cannot delete reservation" });
+  }
+};
