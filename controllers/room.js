@@ -1,11 +1,11 @@
 const Room = require('../models/Room.js')
 exports.getRooms = async (req, res) => {
   try {
-    const { SpaceId } = req.params;
+    const spaceId = req.params.spaceId;
 
-    const rooms = Room.find({
-      space: SpaceId
-    })
+
+    const query = spaceId ? { space: spaceId } : {};
+    const rooms = await Room.find(query);
 
     if (!rooms) {
       return res.status(404).json({
@@ -19,7 +19,7 @@ exports.getRooms = async (req, res) => {
       data: rooms
     })
   }
-  catch (error) {
+  catch (err) {
     res.status(400).json({ success: false });
     console.log(err.stack);
   }
