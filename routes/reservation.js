@@ -8,6 +8,8 @@ const {
   getReservation,
   editReservation,
   cancelReservation,
+  getReservationQR,
+  verifyQRCode,
 } = require("../controllers/reservation.js");
 
 const { protect, authorize } = require("../middleware/auth");
@@ -22,5 +24,6 @@ router
   .get(protect, getReservation)
   .put(editReservation)
   .delete(cancelReservation);
-
+router.get("/:reservationId/qr", protect, getReservationQR);
+router.get("/verify", verifyQRCode);
 module.exports = router;

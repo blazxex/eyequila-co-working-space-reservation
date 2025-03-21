@@ -1,5 +1,7 @@
 const Reservation = require("../models/Reservation");
 const Space = require("../models/WorkingSpace");
+const QRCode = require("qrcode");
+const jwt = require("jsonwebtoken");
 
 exports.getReservations = async (req, res) => {
   try {
@@ -216,5 +218,76 @@ exports.cancelReservation = async (req, res) => {
     res
       .status(500)
       .json({ success: false, message: "Cannot delete reservation" });
+  }
+};
+
+exports.getReservationQR = async (req, res) => {
+  try {
+    const { reservationId } = req.params;
+    const user = req.user;
+
+    const reservation = await Reservation.findById(reservationId).populate(
+      "room"
+    );
+    if (!reservation) {
+      return res.status(404).json({ message: "Reservation not found" });
+    }
+
+    if (reservation.user.toString() !== user.id && user.role !== "admin") {
+      return res.status(403).json({ message: "Unauthorized access" });
+    }
+
+    const now = new Date();
+    if (reservation.endTime < now) {
+      return res.status(400).json({ message: "Reservation already expired" });
+    }
+
+    const token = jwt.sign(
+      {
+        reservationId: reservation._id,
+        userId: user.id,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "10m" }
+    );
+
+    const qrUrl = `${req.protocol}://${req.get(
+      "host"
+    )}/api/v1/reservation/verify?token=${token}`;
+    const qrImage = await QRCode.toDataURL(qrUrl);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        qrCode: qrImage,
+        qrUrl,
+        expiresIn: "10 minutes",
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Failed to generate QR code" });
+  }
+};
+
+exports.verifyQRCode = async (req, res) => {
+  try {
+    const { token } = req.query;
+    if (!token) return res.status(400).json({ message: "Token is required" });
+
+    const payload = jwt.verify(token, SECRET_KEY);
+    const reservation = await Reservation.findById(
+      payload.reservationId
+    ).populate("room");
+
+    if (!reservation || reservation.endTime < new Date()) {
+      return res
+        .status(404)
+        .json({ message: "Invalid or expired reservation" });
+    }
+
+    return res.status(200).json({ success: true, data: reservation });
+  } catch (err) {
+    return res.status(401).json({ message: "Invalid or expired token" });
   }
 };
