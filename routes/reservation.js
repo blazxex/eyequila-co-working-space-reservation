@@ -8,9 +8,10 @@ const {
   getReservation,
   editReservation,
   cancelReservation
-} = require('../controllers/reservation.js')
+} = require('../controllers/reservation.js');
+const { protect } = require("../middleware/auth.js");
 
-router.route('/').get(getReservations).post(createReservation);
+router.route('/').get(getReservations).post(protect, createReservation);
 router.route('/:id').get(getReservation).put(editReservation).delete(cancelReservation);
 
 module.exports = router;

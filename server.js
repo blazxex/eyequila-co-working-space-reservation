@@ -7,6 +7,7 @@ const authRouter = require('./routes/auth.js')
 const userRouter = require('./routes/user.js')
 const workingSpaceRouter = require('./routes/workingSpace.js')
 const roomRouter = require('./routes/room.js')
+const reservationRouter = require('./routes/reservation.js')
 
 // Load env vars
 dotenv.config({ path: "./config/config.env" });
@@ -25,6 +26,7 @@ app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/spaces', workingSpaceRouter);
 app.use('/api/v1/rooms', roomRouter);
+app.use('/api/v1/reservation', reservationRouter);
 
 
 const PORT = process.env.PORT || 5000;

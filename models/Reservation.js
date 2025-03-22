@@ -11,10 +11,13 @@ const ReservationSchema = new mongoose.Schema({
     ref: "User",
     require: true
   },
-  capacity: {
-    type: Number,
-    require: true,
-    default: 4
+  startDate: {
+    type: Date,
+    require: true
+  },
+  endDate: {
+    type: Date,
+    require: true
   }
 })
 
