@@ -9,6 +9,8 @@ exports.getReservations = async (req, res) => {
 exports.getReservation = async (req, res) => {
   // TODO: dynamic data between user and admin req
 }
+
+
 exports.createReservation = async (req, res) => {
   try {
     const { roomId, startDate, endDate } = req.body;
@@ -17,43 +19,21 @@ exports.createReservation = async (req, res) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    const newStartDate = new Date(startDate);
-    const newEndDate = new Date(endDate);
+    const startDateTime = new Date(startDate);
+    const endDateTime = new Date(endDate);
 
-    if (newStartDate >= newEndDate) {
+    // TODO : handle same user reserve consecutive
+
+    // ✅ Check invalid reservation
+    if (startDateTime >= endDateTime) {
       return res.status(400).json({ message: "End time must be after start time" });
     }
 
-    // ✅ Validate Timeboxing (Must be full-hour slots)
-
-    if (
-      newStartDate.getMinutes() !== 0 ||
-      newEndDate.getMinutes() !== 0 ||
-      (newEndDate - newStartDate) % 60 * 60 * 1000 !== 0 ||
-      (newEndDate - newStartDate) < 60 * 60 * 1000
-    ) {
-      return res.status(400).json({ message: "Reservations must be atleast 1-hour slots" });
-    }
-
+    // Check if Room Exists
     const room = await Room.findById(roomId);
     if (!room) {
-      return res.status(404).json({
-        message: "Can not find this room"
-      })
+      return res.status(404).json({ message: "Room not found" });
     }
-
-    // Check for Overlapping Reservations
-    const overlappingReservation = await Reservation.findOne({
-      roomId,
-      $or: [
-        { startDate: { $lt: newEndDate }, endDate: { $gt: newStartDate } } // Overlapping condition
-      ]
-    });
-
-    if (overlappingReservation) {
-      return res.status(400).json({ message: "Time slot is already reserved" });
-    }
-
 
     // Check Workspace Open and Close Hours
     const workspace = await Space.findById(room.space);
@@ -61,35 +41,65 @@ exports.createReservation = async (req, res) => {
       return res.status(404).json({ message: "Workspace not found" });
     }
 
-    const startDateTime = new Date(newStartDate);
-    const endDateTime = new Date(newEndDate);
+    // Limit reservation duration to a maximum hour limit
+    const reservationDuration = (endDateTime - startDateTime) / (1000 * 60 * 60); // Convert to hours
+    if (reservationDuration > workspace.reservationHourLimit) {
+      return res.status(400).json({ message: "Reservation cannot exceed 2 hours" });
+    }
 
-    const [openHour, openMinute] = workspace.openTime.split(":").map(Number);
-    const [closeHour, closeMinute] = workspace.closeTime.split(":").map(Number);
+    // Validate Timeboxing (Must be full-hour slots, at least 1 hour)
+    if (
+      startDateTime.getMinutes() !== 0 ||
+      endDateTime.getMinutes() !== 0 ||
+      reservationDuration < 1
+    ) {
+      return res.status(400).json({ message: "Reservations must be at least 1-hour slots" });
+    }
 
-    const workspaceOpen = new Date(startDateTime);
-    workspaceOpen.setHours(openHour + 7, openMinute, 0, 0);
 
-    const workspaceClose = new Date(startDateTime);
-    workspaceClose.setHours(closeHour+7 , closeMinute, 0, 0);
+    // Check for Overlapping Reservations
+    const overlappingReservation = await Reservation.findOne({
+      roomId,
+      $or: [
+        { startDate: { $lt: endDateTime }, endDate: { $gt: startDateTime } } // Overlapping condition
+      ]
+    });
 
+    if (overlappingReservation) {
+      return res.status(400).json({ message: "Time slot is already reserved" });
+    }
 
-    // console.log(startDateTime);
-    // console.log(endDateTime);
-    // console.log(workspaceOpen);
-    // console.log(workspaceClose);
+    // If workspace is open 24 hours, no need to check time constraints
+    if (!workspace.is24Hours) {
+      const [openHour, openMinute] = workspace.openTime.split(":").map(Number);
+      const [closeHour, closeMinute] = workspace.closeTime.split(":").map(Number);
 
-    // Check if reservation falls outside workspace hours
-    if (startDateTime < workspaceOpen || endDateTime > workspaceClose) {
-      return res.status(400).json({ message: "Reservation must be within working hours" });
+      // Convert working hours to Date objects for precise comparison
+      const openDateTime = new Date(startDateTime);
+      openDateTime.setHours(openHour, openMinute, 0, 0);
+
+      const closeDateTime = new Date(startDateTime);
+      closeDateTime.setHours(closeHour, closeMinute, 0, 0);
+
+      if (startDateTime < openDateTime || endDateTime > closeDateTime) {
+        return res.status(400).json({ message: "Reservation must be within working hours" });
+      }
+
+      // Check if the reservation falls on open days
+      const weekdays = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+      const reservationDay = weekdays[startDateTime.getDay()];
+
+      if (!workspace.openDays.includes(reservationDay )) {
+        return res.status(400).json({ message: "Workspace is closed on the selected day" });
+      }
     }
 
     // Save the Reservation
     const newReservation = new Reservation({
       room: roomId,
       user: req.user.id,
-      startDate: newStartDate,
-      endDate: newEndDate
+      startDate: startDateTime,
+      endDate:endDateTime 
     });
     await newReservation.save();
 
