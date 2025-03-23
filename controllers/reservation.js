@@ -20,10 +20,6 @@ exports.createReservation = async (req, res) => {
     const newStartDate = new Date(startDate);
     const newEndDate = new Date(endDate);
 
-    console.log(newStartDate.getMinutes());
-    console.log(newEndDate.getMinutes());
-    console.log((newEndDate - newStartDate));
-
     if (newStartDate >= newEndDate) {
       return res.status(400).json({ message: "End time must be after start time" });
     }
@@ -72,11 +68,16 @@ exports.createReservation = async (req, res) => {
     const [closeHour, closeMinute] = workspace.closeTime.split(":").map(Number);
 
     const workspaceOpen = new Date(startDateTime);
-    workspaceOpen.setHours(openHour, openMinute, 0, 0);
+    workspaceOpen.setHours(openHour + 7, openMinute, 0, 0);
 
     const workspaceClose = new Date(startDateTime);
-    workspaceClose.setHours(closeHour, closeMinute, 0, 0);
+    workspaceClose.setHours(closeHour+7 , closeMinute, 0, 0);
 
+
+    // console.log(startDateTime);
+    // console.log(endDateTime);
+    // console.log(workspaceOpen);
+    // console.log(workspaceClose);
 
     // Check if reservation falls outside workspace hours
     if (startDateTime < workspaceOpen || endDateTime > workspaceClose) {

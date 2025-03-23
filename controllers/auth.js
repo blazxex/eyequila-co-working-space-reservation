@@ -7,19 +7,33 @@ const { admin, bucket } = require("../config/firebase");
 
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, password, phonenumber, role } = req.body;
+    console.log("register");
+    const { email, role } = req.body;
+
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: No token provided" });
+    }
+
+    const idToken = authHeader.split(" ")[1];
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const firebaseUid = decodedToken.uid;
+
+    console.log(firebaseUid);
 
     // Create user
     const user = await User.create({
-      name,
+      name: "user",
       email,
-      phonenumber,
-      password,
+      phoneNumber: "0000000000",
+      firebaseUid,
       role,
     });
-    // const token = user.getSignedJwtToken();
+    //const token = user.getSignedJwtToken();
+    //res.status(200).json({ success: true, token });
 
-    // res.status(200).json({ success: true, token });
     sendTokenResponse(user, 200, res);
   } catch (err) {
     res.status(400).json({ success: false });
@@ -31,28 +45,29 @@ exports.register = async (req, res, next) => {
 // @route     POST /api/v1/auth/login
 // @access    Public
 exports.login = async (req, res, next) => {
-  // TODO : oauth
-  const { email, password } = req.body;
 
-  // Validate email & password
-  if (!email || !password) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res
+      .status(401)
+      .json({ message: "Unauthorized: No token provided" });
+  }
+  const idToken = authHeader.split(" ")[1];
+  const decodedToken = await admin.auth().verifyIdToken(idToken);
+  const firebaseUid = decodedToken.uid;
+  console.log(firebaseUid);
+
+  if (!firebaseUid) {
     return res
       .status(400)
-      .json({ success: false, msg: "Please provide an email and password" });
+      .json({ success: false, msg: "Please provide firebaseUid" });
   }
 
   // Check for user
-  const user = await User.findOne({ email }).select("+password");
+  const user = await User.findOne({ firebaseUid: firebaseUid });
 
   if (!user) {
     return res.status(400).json({ success: false, msg: "Invalid credentials" });
-  }
-
-  // Check if password matches
-  const isMatch = await user.matchPassword(password);
-
-  if (!isMatch) {
-    return res.status(401).json({ success: false, msg: "Invalid credentials" });
   }
 
   sendTokenResponse(user, 200, res);
