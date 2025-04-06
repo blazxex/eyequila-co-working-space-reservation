@@ -1,5 +1,4 @@
-const { User } = require('../models/User')
-
+const { User } = require("../models/User");
 
 //@desc      Get current logged in user
 //@route     POST /api/v1/auth/me

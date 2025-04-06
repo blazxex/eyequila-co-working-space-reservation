@@ -2,6 +2,8 @@ const express = require("express");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const connectDB = require("./config/db");
+const cors = require("cors");
+
 //Router
 
 const reservation = require("./routes/reservation.js");
@@ -12,17 +14,21 @@ const roomRouter = require("./routes/room.js");
 
 // Load env vars
 dotenv.config({ path: "./config/config.env" });
-
+const corsOptions = {
+  origin: "http://localhost:3000",
+  credentials: true,
+};
 connectDB();
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
+app.use(cors(corsOptions));
 
 app.get("/", (req, res) => {
   res.status(200).json({ success: true, data: { id: 1 } });
 });
 
-app.use("/api/v1/reservation", reservation);
+app.use("/api/v1/reservations", reservation);
 
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/users", userRouter);
