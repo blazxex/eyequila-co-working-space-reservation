@@ -2,9 +2,17 @@ const { User } = require('../models/User')
 
 exports.changeProfile = async (req, res) => {
   const { name, phoneNumber } = req.body;
+  if (!name || !phoneNumber) {
+    return res.status(400).json({
+      success: false,
+      message: "invalid input"
+    })
+  }
   const user = req.user;
-  user.name = name;
-  user.phoneNumber = phoneNumber;
+  user.profile = {
+    name: name,
+    phoneNumber: phoneNumber
+  }
 
   await user.save();
 

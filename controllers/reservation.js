@@ -21,6 +21,7 @@ exports.createReservation = async (req, res) => {
 
     const startDateTime = new Date(startDate);
     const endDateTime = new Date(endDate);
+    console.log(startDateTime)
 
     // TODO : handle same user reserve consecutive
 
@@ -69,6 +70,7 @@ exports.createReservation = async (req, res) => {
       return res.status(400).json({ message: "Time slot is already reserved" });
     }
 
+
     // If workspace is open 24 hours, no need to check time constraints
     if (!workspace.is24Hours) {
       const [openHour, openMinute] = workspace.openTime.split(":").map(Number);
@@ -89,7 +91,7 @@ exports.createReservation = async (req, res) => {
       const weekdays = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
       const reservationDay = weekdays[startDateTime.getDay()];
 
-      if (!workspace.openDays.includes(reservationDay )) {
+      if (!workspace.openDays.includes(reservationDay)) {
         return res.status(400).json({ message: "Workspace is closed on the selected day" });
       }
     }
@@ -99,7 +101,7 @@ exports.createReservation = async (req, res) => {
       room: roomId,
       user: req.user.id,
       startDate: startDateTime,
-      endDate:endDateTime 
+      endDate: endDateTime
     });
     await newReservation.save();
 
