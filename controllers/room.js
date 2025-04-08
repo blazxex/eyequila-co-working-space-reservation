@@ -45,7 +45,8 @@ exports.getRooms = async (req, res) => {
 
 exports.getRoom = async (req, res) => {
   try {
-    const roomId = req.params.RoomId;
+    const roomId = req.params.roomId;
+    console.log(roomId);
     const room = await Room.findById(roomId);
 
     if (!room) {
@@ -68,24 +69,3 @@ exports.getRoom = async (req, res) => {
     });
   }
 };
-
-exports.getRoom = async (req, res) => {
-  try {
-    const room = await Room.findById(req.params.id);
-    if (!room) {
-      return res.status(404).json({
-        success: false,
-        message: "can't find this room"
-      })
-    }
-    return res.status(200).json({
-      success: true,
-      message: "can't find this room",
-      data: room
-    })
-  }
-  catch (err) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-
-}
