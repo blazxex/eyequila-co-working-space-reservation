@@ -8,6 +8,13 @@ const Reservation = require("../models/Reservation");
 exports.getReservation = async (req, res) => {
   try {
     const currentTime = new Date();
+    const reservationId = req.params.reservationId;
+    if (!reservationId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing reservationId" });
+    }
+
     const reservation = await Reservation.findById(
       req.params.reservationId
     ).populate("room");
@@ -16,6 +23,7 @@ exports.getReservation = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Reservation not found or expired." });
     }
+
     if (
       reservation.user.toString() !== req.user.id &&
       req.user.role !== "admin"
@@ -25,6 +33,7 @@ exports.getReservation = async (req, res) => {
         message: "Not authorized to view this reservation.",
       });
     }
+
     res.status(200).json({ success: true, data: reservation });
   } catch (error) {
     res

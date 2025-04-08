@@ -19,10 +19,10 @@ router
   .get(protect, getReservations)
   .post(protect, createReservation);
 router
-  .route("/:id")
-  .get(getReservation)
-  .put(editReservation)
-  .delete(cancelReservation);
+  .route("/:reservationId")
+  .get(protect, getReservation)
+  .put(protect, editReservation)
+  .delete(protect, cancelReservation);
 router.get("/:reservationId/qr", protect, getReservationQR);
 router.get("/verify", verifyQRCode);
 module.exports = router;
