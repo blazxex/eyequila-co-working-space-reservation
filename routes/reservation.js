@@ -11,17 +11,16 @@ const {
   getReservationQR,
   verifyQRCode,
 } = require("../controllers/reservation.js");
-
-const { protect, authorize } = require("../middleware/auth");
+const { protect } = require("../middleware/auth.js");
+const { getMe } = require("../controllers/user.js");
 
 router
   .route("/")
   .get(protect, getReservations)
   .post(protect, createReservation);
-
 router
   .route("/:id")
-  .get(protect, getReservation)
+  .get(getReservation)
   .put(editReservation)
   .delete(cancelReservation);
 router.get("/:reservationId/qr", protect, getReservationQR);

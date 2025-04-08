@@ -22,6 +22,20 @@ const WorkingSpaceSchema = new mongoose.Schema({
     type: String,
     required: [true, "Please add close time"],
     default: "20:00"
+  },
+  openDays: {
+    type: [String], // Array of strings
+    enum: ["mon", "tue", "wed", "thu", "fri", "sat", "sun"], // Restrict to valid days
+    default : ["mon", "tue", "wed", "thu", "fri"],
+    required: true
+  },
+  is24Hours: { type: Boolean, default: false },
+  reservationHourLimit : {
+    type : Number,
+    required : [true, "Please decide limit hour per reservation"],
+    default : 2,
+    min: 0,
+    max: 12
   }
 },
   {

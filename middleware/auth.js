@@ -5,11 +5,15 @@ const User = require("../models/User");
 exports.protect = async (req, res, next) => {
   let token;
 
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
-    token = req.headers.authorization.split(" ")[1];
+  // Get token from cookies
+  console.log(req.cookies.token);
+  if (req.cookies && req.cookies.token) {
+    token = req.cookies.token;
+    console.log(token);
+  }
+
+  if (req.cookies && req.cookies.token) {
+    token = req.cookies.token;
   }
 
   // Make sure token exists
@@ -22,11 +26,8 @@ exports.protect = async (req, res, next) => {
   try {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log(decoded);
-
-    console.log(decoded.id);
     req.user = await User.findById(decoded.id);
-
+    console.log(req.user);
     next();
   } catch (err) {
     console.log(err.stack);
