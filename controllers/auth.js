@@ -4,7 +4,6 @@ const { admin, bucket } = require("../config/firebase");
 // @desc      Register user
 // @route     POST /api/v1/auth/register
 // @access    Public
-
 exports.register = async (req, res, next) => {
   try {
     console.log("register");
@@ -43,12 +42,9 @@ exports.register = async (req, res, next) => {
 // @route     POST /api/v1/auth/login
 // @access    Public
 exports.login = async (req, res, next) => {
-
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res
-      .status(401)
-      .json({ message: "Unauthorized: No token provided" });
+    return res.status(401).json({ message: "Unauthorized: No token provided" });
   }
   const idToken = authHeader.split(" ")[1];
   const decodedToken = await admin.auth().verifyIdToken(idToken);
@@ -71,14 +67,13 @@ exports.login = async (req, res, next) => {
   sendTokenResponse(user, 200, res);
 };
 
-
 exports.logout = async (req, res, next) => {
-  res.cookie('token', '', {
+  res.cookie("token", "", {
     httpOnly: true,
-    expires: new Date(0) // Expire immediately
+    expires: new Date(0), // Expire immediately
   });
-  res.status(200).json({ message: 'Logged out successfully' });
-}
+  res.status(200).json({ message: "Logged out successfully" });
+};
 
 // Get token from model, create cookie and send response
 const sendTokenResponse = (user, statusCode, res) => {
@@ -102,4 +97,3 @@ const sendTokenResponse = (user, statusCode, res) => {
     token,
   });
 };
-
