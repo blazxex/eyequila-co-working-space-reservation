@@ -41,7 +41,6 @@ exports.getRooms = async (req, res) => {
     res.status(400).json({ success: false });
     console.log(err.stack);
   }
-  return res.status(200);
 };
 
 exports.getRoom = async (req, res) => {
