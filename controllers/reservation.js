@@ -59,7 +59,8 @@ exports.getReservations = async (req, res) => {
 
 exports.createReservation = async (req, res) => {
   try {
-    const { roomId, startTime, endTime, capacity } = req.body;
+    const { startTime, endTime, capacity } = req.body;
+    const roomId = req.params.roomId;
 
     if (!roomId || !startTime || !endTime) {
       return res.status(400).json({ message: "Missing required fields" });
@@ -111,9 +112,12 @@ exports.createReservation = async (req, res) => {
 
     // Check for Overlapping Reservations
     const overlappingReservation = await Reservation.findOne({
-      roomId,
+      room: roomId,
       $or: [
-        { startDate: { $lt: endDateTime }, endDate: { $gt: startDateTime } }, // Overlapping condition
+        {
+          startTime: { $lt: endDateTime },
+          endTime: { $gt: startDateTime },
+        },
       ],
     });
 
@@ -158,6 +162,7 @@ exports.createReservation = async (req, res) => {
       user: req.user.id,
       startDate: startDateTime,
       endDate: endDateTime,
+      capacity: capacity,
     });
     await newReservation.save();
 
