@@ -110,6 +110,12 @@ exports.createReservation = async (req, res) => {
         .json({ message: "Reservations must be at least 1-hour slots" });
     }
 
+    if (capacity > room.capacity) {
+      return res.status(400).json({
+        message: `Requested capacity exceeds room limit. Max: ${room.capacity}`,
+      });
+    }
+
     // Check for Overlapping Reservations
     const overlappingReservation = await Reservation.findOne({
       room: roomId,
