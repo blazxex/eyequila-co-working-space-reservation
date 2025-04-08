@@ -231,7 +231,7 @@ exports.verifyQRCode = async (req, res) => {
     const { token } = req.query;
     if (!token) return res.status(400).json({ message: "Token is required" });
 
-    const payload = jwt.verify(token, SECRET_KEY);
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
     const reservation = await Reservation.findById(
       payload.reservationId
     ).populate("room");
