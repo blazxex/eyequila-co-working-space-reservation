@@ -7,7 +7,7 @@ var serviceAccount = JSON.parse(process.env.GOOGLE_CREDS);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  storageBucket: "aucauc-78bff.firebasestorage.app",
+  storageBucket: "eyequila-co-working.firebasestorage.app",
 });
 
 const bucket = admin.storage().bucket();

@@ -32,30 +32,29 @@ exports.getReservation = async (req, res) => {
 };
 exports.getReservations = async (req, res) => {
   try {
-    let query;
     const currentTime = new Date();
+    console.log(req.user);
+    const filter =
+      req.user.role !== "admin"
+        ? { user: req.user.id, endTime: { $gt: currentTime } }
+        : { endTime: { $gt: currentTime } };
 
-    if (req.user.role !== "admin") {
-      query = Reservation.find({
-        user: req.user.id,
-        endTime: { $gt: currentTime },
-      }).populate("room");
-    } else {
-      query = Reservation.find({ endTime: { $gt: currentTime } }).populate(
-        "room"
-      );
-    }
+    const reservations = await Reservation.find(filter).populate("room");
 
-    const reservations = await query;
-    res
-      .status(200)
-      .json({ success: true, count: reservations.length, data: reservations });
+    res.status(200).json({
+      success: true,
+      count: reservations.length,
+      data: reservations,
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({ success: false, message: "Cannot retrieve reservations" });
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Cannot retrieve reservations",
+    });
   }
 };
+
 exports.createReservation = async (req, res) => {
   try {
     const { roomId, startDate, endDate } = req.body;

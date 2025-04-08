@@ -11,7 +11,10 @@ const {
 } = require("../controllers/reservation.js");
 const { protect } = require("../middleware/auth.js");
 
-router.route("/").get(getReservations).post(protect, createReservation);
+router
+  .route("/")
+  .get(protect, getReservations)
+  .post(protect, createReservation);
 router
   .route("/:id")
   .get(getReservation)

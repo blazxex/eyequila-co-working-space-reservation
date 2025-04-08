@@ -1,8 +1,9 @@
 const Room = require("../models/Room.js");
+const Reservation = require("../models/Reservation.js");
 exports.getRooms = async (req, res) => {
   try {
     const { spaceId } = req.params;
-    const { startDate, endDate, capacity } = req.body;
+    const { startDate, endDate, requiredCapacity } = req.body;
 
     const query = spaceId ? { space: spaceId } : {};
     const rooms = await Room.find(query);
@@ -40,14 +41,14 @@ exports.getRooms = async (req, res) => {
     res.status(400).json({ success: false });
     console.log(err.stack);
   }
-  return res.sendstatus(200);
+  return res.status(200);
 };
 
 exports.getRoom = async (req, res) => {
   try {
     const roomId = req.params.RoomId;
     const room = await Room.findById(roomId);
-    console.log(roomId, "S");
+
     if (!room) {
       return res.status(404).json({
         success: false,
