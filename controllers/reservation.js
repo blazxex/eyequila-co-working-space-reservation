@@ -1,11 +1,20 @@
 const User = require("../models/User");
 const Space = require("../models/WorkingSpace");
+const QRCode = require("qrcode");
+const jwt = require("jsonwebtoken");
 const Room = require("../models/Room");
 const Reservation = require("../models/Reservation");
 
 exports.getReservation = async (req, res) => {
   try {
     const currentTime = new Date();
+    const reservationId = req.params.reservationId;
+    if (!reservationId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing reservationId" });
+    }
+
     const reservation = await Reservation.findById(
       req.params.reservationId
     ).populate("room");
@@ -14,6 +23,7 @@ exports.getReservation = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Reservation not found or expired." });
     }
+
     if (
       reservation.user.toString() !== req.user.id &&
       req.user.role !== "admin"
@@ -23,6 +33,7 @@ exports.getReservation = async (req, res) => {
         message: "Not authorized to view this reservation.",
       });
     }
+
     res.status(200).json({ success: true, data: reservation });
   } catch (error) {
     res
@@ -57,7 +68,8 @@ exports.getReservations = async (req, res) => {
 
 exports.createReservation = async (req, res) => {
   try {
-    const { roomId, startTime, endTime, capacity } = req.body;
+    const { startTime, endTime, capacity } = req.body;
+    const roomId = req.params.roomId;
 
     if (!roomId || !startTime || !endTime) {
       return res.status(400).json({ message: "Missing required fields" });
@@ -107,11 +119,20 @@ exports.createReservation = async (req, res) => {
         .json({ message: "Reservations must be at least 1-hour slots" });
     }
 
+    if (capacity > room.capacity) {
+      return res.status(400).json({
+        message: `Requested capacity exceeds room limit. Max: ${room.capacity}`,
+      });
+    }
+
     // Check for Overlapping Reservations
     const overlappingReservation = await Reservation.findOne({
-      roomId,
+      room: roomId,
       $or: [
-        { startDate: { $lt: endDateTime }, endDate: { $gt: startDateTime } }, // Overlapping condition
+        {
+          startTime: { $lt: endDateTime },
+          endTime: { $gt: startDateTime },
+        },
       ],
     });
 
@@ -156,6 +177,7 @@ exports.createReservation = async (req, res) => {
       user: req.user.id,
       startDate: startDateTime,
       endDate: endDateTime,
+      capacity: capacity,
     });
     await newReservation.save();
 
@@ -250,5 +272,76 @@ exports.cancelReservation = async (req, res) => {
     res
       .status(500)
       .json({ success: false, message: "Cannot delete reservation" });
+  }
+};
+
+exports.getReservationQR = async (req, res) => {
+  try {
+    const { reservationId } = req.params;
+    const user = req.user;
+
+    const reservation = await Reservation.findById(reservationId).populate(
+      "room"
+    );
+    if (!reservation) {
+      return res.status(404).json({ message: "Reservation not found" });
+    }
+
+    if (reservation.user.toString() !== user.id && user.role !== "admin") {
+      return res.status(403).json({ message: "Unauthorized access" });
+    }
+
+    const now = new Date();
+    if (reservation.endTime < now) {
+      return res.status(400).json({ message: "Reservation already expired" });
+    }
+
+    const token = jwt.sign(
+      {
+        reservationId: reservation._id,
+        userId: user.id,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "10m" }
+    );
+
+    const qrUrl = `${req.protocol}://${req.get(
+      "host"
+    )}/api/v1/reservation/verify?token=${token}`;
+    const qrImage = await QRCode.toDataURL(qrUrl);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        qrCode: qrImage,
+        qrUrl,
+        expiresIn: "10 minutes",
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Failed to generate QR code" });
+  }
+};
+
+exports.verifyQRCode = async (req, res) => {
+  try {
+    const { token } = req.query;
+    if (!token) return res.status(400).json({ message: "Token is required" });
+
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    const reservation = await Reservation.findById(
+      payload.reservationId
+    ).populate("room");
+
+    if (!reservation || reservation.endTime < new Date()) {
+      return res
+        .status(404)
+        .json({ message: "Invalid or expired reservation" });
+    }
+
+    return res.status(200).json({ success: true, data: reservation });
+  } catch (err) {
+    return res.status(401).json({ message: "Invalid or expired token" });
   }
 };
