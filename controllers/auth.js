@@ -7,7 +7,7 @@ const { admin, bucket } = require("../config/firebase");
 exports.register = async (req, res, next) => {
   try {
     console.log("register");
-    const { email, role } = req.body;
+    const { name, email, phoneNumber, role } = req.body;
 
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -25,6 +25,8 @@ exports.register = async (req, res, next) => {
     // Create user
     const user = await User.create({
       email,
+      name,
+      phoneNumber,
       firebaseUid,
       role,
     });

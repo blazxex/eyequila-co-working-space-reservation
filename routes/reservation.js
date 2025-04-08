@@ -10,6 +10,7 @@ const {
   cancelReservation,
 } = require("../controllers/reservation.js");
 const { protect } = require("../middleware/auth.js");
+const { getMe } = require("../controllers/user.js");
 
 router
   .route("/")

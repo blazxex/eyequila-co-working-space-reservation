@@ -5,7 +5,7 @@ const reservation = require("../routes/reservation");
 const { getRooms, getRoom } = require("../controllers/room");
 
 router.route("/").get(getRooms);
-router.route("/:RoomId").get(getRoom);
+router.route("/:id").get(getRoom);
 
 router.use("/:RoomId/reservation", reservation);
 

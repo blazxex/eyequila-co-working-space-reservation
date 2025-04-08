@@ -12,15 +12,15 @@ const UserSchema = new mongoose.Schema({
       "Please add a valid email",
     ],
   },
-  profile: {
-    name: {
-      type: String,
-      //required: [true, "Please add a name"],
-    },
-    phoneNumber: {
-      type: String,
-      //require: [true, "Please add an address"]
-    }
+  name: {
+    type: String,
+    default: "user"
+    //required: [true, "Please add a name"],
+  },
+  phoneNumber: {
+    type: String,
+    default: "0000000000"
+    //require: [true, "Please add an address"]
   },
   firebaseUid: {
     type: String,
@@ -36,7 +36,7 @@ const UserSchema = new mongoose.Schema({
 });
 
 // Sign JWT and return
-UserSchema.methods.getSignedJwtToken = function() {
+UserSchema.methods.getSignedJwtToken = function () {
   return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE,
   });
