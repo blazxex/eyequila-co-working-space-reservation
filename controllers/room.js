@@ -1,7 +1,8 @@
 const Room = require("../models/Room.js");
 exports.getRooms = async (req, res) => {
   try {
-    const spaceId = req.params.spaceId;
+    const { spaceId } = req.params;
+    const { startDate, endDate, capacity } = req.body;
 
     const query = spaceId ? { space: spaceId } : {};
     const rooms = await Room.find(query);
@@ -12,7 +13,25 @@ exports.getRooms = async (req, res) => {
         message: "Can not find room",
       });
     }
-    return res.status(200).json({
+
+    // Check availability for each room if date range is provided
+    const availableRooms = [];
+
+    for (const room of rooms) {
+      const reservations = await Reservation.find({
+        room: room._id,
+        $or: [
+          { startDate: { $lt: endDate }, endDate: { $gt: startDate } }, // Overlapping reservations
+        ],
+      });
+
+      // If no reservations overlap, add the room to availableRooms
+      if (reservations.length === 0 && room.capacity >= requiredCapacity) {
+        availableRooms.push(room);
+      }
+    }
+
+    res.status(200).json({
       success: true,
       message: "find room successful",
       data: rooms,

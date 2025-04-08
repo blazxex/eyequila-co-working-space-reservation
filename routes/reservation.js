@@ -9,18 +9,12 @@ const {
   editReservation,
   cancelReservation,
 } = require("../controllers/reservation.js");
+const { protect } = require("../middleware/auth.js");
 
-const { protect, authorize } = require("../middleware/auth");
-const { checkReservationConflict } = require("../middleware/reservation");
-
-router.route("/").get(protect, getReservations);
-
-router
-  .route("/:RoomId")
-  .post(protect, checkReservationConflict, createReservation);
+router.route("/").get(getReservations).post(protect, createReservation);
 router
   .route("/:id")
-  .get(protect, getReservation)
+  .get(getReservation)
   .put(editReservation)
   .delete(cancelReservation);
 

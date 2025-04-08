@@ -5,8 +5,8 @@ const reservation = require("../routes/reservation");
 const { getRooms, getRoom } = require("../controllers/room");
 
 router.route("/").get(getRooms);
+router.route("/:RoomId").get(getRoom);
 
-router.post("/:RoomId/reservation/", reservation);
-router.get("/:RoomId", getRoom);
+router.use("/:RoomId/reservation/", reservation);
 
 module.exports = router;
