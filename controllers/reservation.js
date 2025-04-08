@@ -13,17 +13,16 @@ exports.getReservation = async (req, res) => {
 
 exports.createReservation = async (req, res) => {
   try {
-    const { roomId, startDate, endDate } = req.body;
+    const { roomId, startTime, endTime, capacity } = req.body;
 
-    if (!roomId || !startDate || !endDate) {
+    if (!roomId || !startTime || !endTime) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    const startDateTime = new Date(startDate);
-    const endDateTime = new Date(endDate);
-    console.log(startDateTime)
-
-    // TODO : handle same user reserve consecutive
+    const startDateTime = new Date(startTime);
+    const endDateTime = new Date(endTime);
+    console.log('startDate : ', startDateTime);
+    console.log('endDate : ', endDateTime);
 
     // ✅ Check invalid reservation
     if (startDateTime >= endDateTime) {
@@ -105,7 +104,7 @@ exports.createReservation = async (req, res) => {
     });
     await newReservation.save();
 
-    return res.status(201).json({ message: "Reservation created successfully" });
+    return res.status(201).json({ success: true, message: "Reservation created successfully" });
 
   } catch (error) {
     console.error(error);
