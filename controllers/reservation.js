@@ -16,9 +16,9 @@ exports.getReservation = async (req, res) => {
         .json({ success: false, message: "Missing reservationId" });
     }
 
-    const reservation = await Reservation.findById(
-      req.params.reservationId
-    ).populate("room");
+    const reservation = await Reservation.findById(req.params.id).populate(
+      "room"
+    );
     if (!reservation || reservation.endTime <= currentTime) {
       return res
         .status(404)
@@ -75,29 +75,107 @@ exports.createReservation = async (req, res) => {
     if (!roomId || !startTime || !endTime) {
       return res.status(400).json({ message: "Missing required fields" });
     }
-    // TODO Check if the user has reached the reservation limit or not
 
-    const { startDateTime, endDateTime } = await checkReservationConstraints({
+    const startDateTime = new Date(startTime);
+    const endDateTime = new Date(endTime);
+    console.log("startDate : ", startDateTime);
+    console.log("endDate : ", endDateTime);
+
+    // ✅ Check invalid reservation
+    if (startDateTime >= endDateTime) {
+      return res
+        .status(400)
+        .json({ message: "End time must be after start time" });
+    }
+
+    // Check if Room Exists
+    const room = await Room.findById(roomId);
+    if (!room) {
+      return res.status(404).json({ message: "Room not found" });
+    }
+
+    // Check Workspace Open and Close Hours
+    const workspace = await Space.findById(room.space);
+    if (!workspace) {
+      return res.status(404).json({ message: "Workspace not found" });
+    }
+
+    // Limit reservation duration to a maximum hour limit
+    const reservationDuration =
+      (endDateTime - startDateTime) / (1000 * 60 * 60); // Convert to hours
+    if (reservationDuration > workspace.reservationHourLimit) {
+      return res
+        .status(400)
+        .json({ message: "Reservation cannot exceed 2 hours" });
+    }
+
+    // Validate Timeboxing (Must be full-hour slots, at least 1 hour)
+    if (
+      startDateTime.getMinutes() !== 0 ||
+      endDateTime.getMinutes() !== 0 ||
+      reservationDuration < 1
+    ) {
+      return res
+        .status(400)
+        .json({ message: "Reservations must be at least 1-hour slots" });
+    }
+
+    // Check for Overlapping Reservations
+    const overlappingReservation = await Reservation.findOne({
       roomId,
-      startTime,
-      endTime,
-      capacity,
+      $or: [
+        { startDate: { $lt: endDateTime }, endDate: { $gt: startDateTime } }, // Overlapping condition
+      ],
     });
 
+    if (overlappingReservation) {
+      return res.status(400).json({ message: "Time slot is already reserved" });
+    }
+
+    // If workspace is open 24 hours, no need to check time constraints
+    if (!workspace.is24Hours) {
+      const [openHour, openMinute] = workspace.openTime.split(":").map(Number);
+      const [closeHour, closeMinute] = workspace.closeTime
+        .split(":")
+        .map(Number);
+
+      // Convert working hours to Date objects for precise comparison
+      const openDateTime = new Date(startDateTime);
+      openDateTime.setHours(openHour, openMinute, 0, 0);
+
+      const closeDateTime = new Date(startDateTime);
+      closeDateTime.setHours(closeHour, closeMinute, 0, 0);
+
+      if (startDateTime < openDateTime || endDateTime > closeDateTime) {
+        return res
+          .status(400)
+          .json({ message: "Reservation must be within working hours" });
+      }
+
+      // Check if the reservation falls on open days
+      const weekdays = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+      const reservationDay = weekdays[startDateTime.getDay()];
+
+      if (!workspace.openDays.includes(reservationDay)) {
+        return res
+          .status(400)
+          .json({ message: "Workspace is closed on the selected day" });
+      }
+    }
+
+    // Save the Reservation
     const newReservation = new Reservation({
       room: roomId,
       user: req.user.id,
-      startTime: startDateTime,
-      endTime: endDateTime,
-      capacity: capacity,
+      startDate: startDateTime,
+      endDate: endDateTime,
     });
     console.log("New reservation", newReservation);
     await newReservation.save();
 
-    return res.status(201).json({
-      success: true,
-      message: "Reservation created successfully",
-    });
+    return res
+      .status(201)
+      .json({ success: true, message: "Reservation created successfully" });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });
   }
