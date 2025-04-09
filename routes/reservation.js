@@ -18,11 +18,12 @@ router
   .route("/")
   .get(protect, getReservations)
   .post(protect, createReservation);
+router.get("/verify", verifyQRCode);
 router
   .route("/:reservationId")
   .get(protect, getReservation)
   .put(protect, editReservation)
   .delete(protect, cancelReservation);
 router.get("/:reservationId/qr", protect, getReservationQR);
-router.get("/verify", verifyQRCode);
+
 module.exports = router;
