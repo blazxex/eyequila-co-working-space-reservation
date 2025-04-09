@@ -7,7 +7,7 @@ exports.getReservation = async (req, res) => {
   try {
     const currentTime = new Date();
     const reservation = await Reservation.findById(
-      req.params.reservationId
+      req.params.id
     ).populate("room");
     if (!reservation || reservation.endTime <= currentTime) {
       return res
@@ -87,6 +87,12 @@ exports.createReservation = async (req, res) => {
       return res.status(404).json({ message: "Workspace not found" });
     }
 
+    if (workspace.capacity < capacity) {
+      return res.status(400).json({
+        message: "Capacity if out of limit"
+      })
+    }
+
     // Limit reservation duration to a maximum hour limit
     const reservationDuration =
       (endDateTime - startDateTime) / (1000 * 60 * 60); // Convert to hours
@@ -110,10 +116,10 @@ exports.createReservation = async (req, res) => {
     // Check for Overlapping Reservations
     const overlappingReservation = await Reservation.findOne({
       roomId,
-      $or: [
-        { startDate: { $lt: endDateTime }, endDate: { $gt: startDateTime } }, // Overlapping condition
-      ],
+      startDate: { $lt: endDateTime },
+      endDate: { $gt: startDateTime },
     });
+    console.log(overlappingReservation);
 
     if (overlappingReservation) {
       return res.status(400).json({ message: "Time slot is already reserved" });
@@ -150,18 +156,24 @@ exports.createReservation = async (req, res) => {
       }
     }
 
+    console.log(startDateTime);
     // Save the Reservation
     const newReservation = new Reservation({
       room: roomId,
       user: req.user.id,
-      startDate: startDateTime,
-      endDate: endDateTime,
+      startTime: startDateTime,
+      capacity: capacity,
+      endTime: endDateTime,
     });
     await newReservation.save();
 
     return res
       .status(201)
-      .json({ success: true, message: "Reservation created successfully" });
+      .json({
+        success: true,
+        message: "Reservation created successfully",
+        data: newReservation
+      });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Server error" });

@@ -9,17 +9,17 @@ const {
   editReservation,
   cancelReservation,
 } = require("../controllers/reservation.js");
-const { protect } = require("../middleware/auth.js");
+const { protect, authorize } = require("../middleware/auth.js");
 const { getMe } = require("../controllers/user.js");
 
 router
   .route("/")
-  .get(protect, getReservations)
-  .post(protect, createReservation);
+  .get(protect, authorize('user', 'admin'), getReservations)
+  .post(protect, authorize('user'), createReservation);
 router
   .route("/:id")
-  .get(getReservation)
-  .put(editReservation)
-  .delete(cancelReservation);
+  .get(protect, authorize('user', 'admin'), getReservation)
+  .put(protect, authorize('user', 'admin'), editReservation)
+  .delete(protect, authorize('user', 'admin'), cancelReservation);
 
 module.exports = router;
