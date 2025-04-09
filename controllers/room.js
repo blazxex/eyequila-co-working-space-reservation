@@ -54,8 +54,8 @@ exports.getRoom = async (req, res) => {
   try {
     const roomId = req.params.roomId;
     const durationMinutes = parseInt(req.query.durationMinutes) || 30;
-
     const date = req.query.date || dayjs().format("YYYY-MM-DD");
+    const now = dayjs();
 
     const room = await Room.findById(roomId).populate("space");
 
@@ -66,50 +66,57 @@ exports.getRoom = async (req, res) => {
       });
     }
 
-    let unavailableSlots = [];
-
     const space = room.space;
     const openTime = dayjs(`${date}T${space.openTime}`);
     const closeTime = dayjs(`${date}T${space.closeTime}`);
     const dayOfWeek = dayjs(date).format("ddd").toLowerCase(); // "mon", "tue", etc.
 
+    // If space is closed on this day
     if (!space.openDays.includes(dayOfWeek)) {
-      // Room is closed on this day
-      unavailableSlots.push({
-        start: space.openTime,
-        end: space.closeTime,
-        reason: "Closed on this day",
+      return res.status(200).json({
+        success: true,
+        message: "Room fetched successfully",
+        data: {
+          ...room.toObject(),
+          availableSlots: [],
+          note: "Closed on this day",
+        },
       });
-    } else {
-      // Get existing overlapping reservations
-      const reservations = await Reservation.find({
-        room: roomId,
-        startTime: { $lt: closeTime.toDate() },
-        endTime: { $gt: openTime.toDate() },
-      });
+    }
 
-      let slotStart = openTime;
+    // Get existing overlapping reservations
+    const reservations = await Reservation.find({
+      room: roomId,
+      startTime: { $lt: closeTime.toDate() },
+      endTime: { $gt: openTime.toDate() },
+    });
 
-      while (
-        slotStart.add(durationMinutes, "minute").isSameOrBefore(closeTime)
-      ) {
-        const slotEnd = slotStart.add(durationMinutes, "minute");
+    let availableSlots = [];
+    let slotStart = openTime;
 
-        const isOverlap = reservations.some((r) => {
-          const rStart = dayjs(r.startTime);
-          const rEnd = dayjs(r.endTime);
-          return rStart.isBefore(slotEnd) && rEnd.isAfter(slotStart);
-        });
+    while (slotStart.add(durationMinutes, "minute").isSameOrBefore(closeTime)) {
+      const slotEnd = slotStart.add(durationMinutes, "minute");
 
-        if (isOverlap) {
-          unavailableSlots.push({
-            start: slotStart.format("HH:mm"),
-            end: slotEnd.format("HH:mm"),
-          });
-        }
-
-        slotStart = slotStart.add(30, "minute"); // Slide by 30 mins
+      // Skip slots in the past if the queried date is today
+      if (dayjs(date).isSame(now, "day") && slotStart.isBefore(now)) {
+        slotStart = slotStart.add(30, "minute");
+        continue;
       }
+
+      const isOverlap = reservations.some((r) => {
+        const rStart = dayjs(r.startTime);
+        const rEnd = dayjs(r.endTime);
+        return rStart.isBefore(slotEnd) && rEnd.isAfter(slotStart);
+      });
+
+      if (!isOverlap) {
+        availableSlots.push({
+          start: slotStart.format("HH:mm"),
+          end: slotEnd.format("HH:mm"),
+        });
+      }
+
+      slotStart = slotStart.add(30, "minute");
     }
 
     return res.status(200).json({
@@ -117,7 +124,7 @@ exports.getRoom = async (req, res) => {
       message: "Room fetched successfully",
       data: {
         ...room.toObject(),
-        unavailableSlots,
+        availableSlots,
       },
     });
   } catch (err) {
