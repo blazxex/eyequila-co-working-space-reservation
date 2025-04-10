@@ -69,8 +69,9 @@ exports.getReservations = async (req, res) => {
 
 exports.createReservation = async (req, res) => {
   try {
-    const { startTime, endTime, capacity } = req.body;
-    const roomId = req.params.roomId;
+    const { roomId, startTime, endTime, capacity } = req.body;
+    // const roomId = req.params.roomId;
+    console.log(roomId);
 
     if (!roomId || !startTime || !endTime) {
       return res.status(400).json({ message: "Missing required fields" });
