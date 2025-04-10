@@ -113,13 +113,14 @@ exports.createReservation = async (req, res) => {
         .json({ message: "Reservations must be at least 1-hour slots" });
     }
 
-    // Check for Overlapping Reservations
     const overlappingReservation = await Reservation.findOne({
       roomId,
-      startDate: { $lt: endDateTime },
-      endDate: { $gt: startDateTime },
+      $or: [
+        { startDate: { $lte: startDateTime }, endDate: { $gte: startDateTime } },
+        { startDate: { $lte: endDateTime }, endDate: { $gte: endDateTime } },
+        { startDate: { $gte: startDateTime }, endDate: { $lte: endDateTime } }
+      ]
     });
-    console.log(overlappingReservation);
 
     if (overlappingReservation) {
       return res.status(400).json({ message: "Time slot is already reserved" });
