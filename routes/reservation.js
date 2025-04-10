@@ -1,6 +1,6 @@
 const express = require("express");
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
 const {
   createReservation,
@@ -8,18 +8,22 @@ const {
   getReservation,
   editReservation,
   cancelReservation,
+  getReservationQR,
+  verifyQRCode,
 } = require("../controllers/reservation.js");
-const { protect, authorize } = require("../middleware/auth.js");
+const { protect } = require("../middleware/auth.js");
 const { getMe } = require("../controllers/user.js");
 
 router
   .route("/")
-  .get(protect, authorize('user', 'admin'), getReservations)
-  .post(protect, authorize('user'), createReservation);
+  .get(protect, getReservations)
+  .post(protect, createReservation);
+router.get("/verify", verifyQRCode);
 router
-  .route("/:id")
-  .get(protect, authorize('user', 'admin'), getReservation)
-  .put(protect, authorize('user', 'admin'), editReservation)
-  .delete(protect, authorize('user', 'admin'), cancelReservation);
+  .route("/:reservationId")
+  .get(protect, getReservation)
+  .put(protect, editReservation)
+  .delete(protect, cancelReservation);
+router.get("/:reservationId/qr", protect, getReservationQR);
 
 module.exports = router;
