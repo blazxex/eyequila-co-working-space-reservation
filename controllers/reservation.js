@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const Room = require("../models/Room");
 const Reservation = require("../models/Reservation");
 const { checkReservationConstraints } = require("../middleware/reservation");
+const { now } = require("mongoose");
 
 exports.getReservation = async (req, res) => {
   try {
@@ -76,6 +77,19 @@ exports.createReservation = async (req, res) => {
     if (!roomId || !startTime || !endTime) {
       return res.status(400).json({ message: "Missing required fields" });
     }
+
+    // get count of reservation where startTime is less than now
+    const reservationCount = await Reservation.countDocuments({
+      user: req.user._id,
+      startTime: { $gte: now() }
+    })
+    if (reservationCount >= 3) {
+      return res.status(400).json({
+        success: false,
+        message: "person can reserve upto only 3 room"
+      })
+    }
+
     const { startDateTime, endDateTime } = await checkReservationConstraints({
       roomId,
       startTime,

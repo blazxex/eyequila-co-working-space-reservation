@@ -6,10 +6,8 @@ exports.protect = async (req, res, next) => {
   let token;
 
   // Get token from cookies
-  console.log(req.cookies.token);
   if (req.cookies && req.cookies.token) {
     token = req.cookies.token;
-    console.log(token);
   }
 
   if (req.cookies && req.cookies.token) {
@@ -27,7 +25,6 @@ exports.protect = async (req, res, next) => {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = await User.findById(decoded.id);
-    // console.log(req.user);
     next();
   } catch (err) {
     console.log(err.stack);
