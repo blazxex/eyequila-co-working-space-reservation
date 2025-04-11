@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const { admin, bucket } = require("../config/firebase");
+const { validationResult } = require('express-validator');
 
 // @desc      Register user
 // @route     POST /api/v1/auth/register
