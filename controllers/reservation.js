@@ -71,12 +71,6 @@ exports.getReservations = async (req, res) => {
 exports.createReservation = async (req, res) => {
   try {
     const { roomId, startTime, endTime, capacity } = req.body;
-    // const roomId = req.params.roomId;
-    console.log(roomId);
-
-    if (!roomId || !startTime || !endTime) {
-      return res.status(400).json({ message: "Missing required fields" });
-    }
 
     // get count of reservation where startTime is less than now
     const reservationCount = await Reservation.countDocuments({

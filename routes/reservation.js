@@ -13,11 +13,13 @@ const {
 } = require("../controllers/reservation.js");
 const { protect } = require("../middleware/auth.js");
 const { getMe } = require("../controllers/user.js");
+const { reservationValidator } = require("../middleware/validator/reservation.validator.js");
+const validate = require("../middleware/validator/validate.js");
 
 router
   .route("/")
   .get(protect, getReservations)
-  .post(protect, createReservation);
+  .post(protect, reservationValidator, validate, createReservation);
 router.get("/verify", verifyQRCode);
 router
   .route("/:reservationId")
