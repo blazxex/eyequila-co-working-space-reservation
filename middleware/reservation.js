@@ -12,16 +12,20 @@ exports.checkReservationConstraints = async ({
   const startDateTime = new Date(startTime);
   const endDateTime = new Date(endTime);
 
+  if (startDateTime <= Date.now() || endDateTime <= Date.now()) {
+    throw new Error("Can't reserve in the past");
+  }
+
   if (startDateTime >= endDateTime) {
     throw new Error("End time must be after start time");
   }
 
   if (
-    startDateTime.getMinutes() !== 0 ||
-    endDateTime.getMinutes() !== 0 ||
-    (endDateTime - startDateTime) / (1000 * 60 * 60) < 1
+    (startDateTime.getMinutes() % 30 !== 0) ||
+    (endDateTime.getMinutes() % 30 !== 0) ||
+    (endDateTime - startDateTime) / (1000 * 60) < 30
   ) {
-    throw new Error("Reservations must be full-hour slots and at least 1 hour");
+    throw new Error("Reservations must be in 30-minute increments and at least 30 minutes long");
   }
 
   const room = await Room.findById(roomId);

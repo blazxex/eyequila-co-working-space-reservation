@@ -1,9 +1,6 @@
 const { body } = require('express-validator');
 
 exports.reservationValidator = [
-  body('roomId')
-    .notEmpty().withMessage('roomId is required')
-    .isString().withMessage('Invalid roomId'),
 
   body('startTime')
     .notEmpty().withMessage('startTime is required')

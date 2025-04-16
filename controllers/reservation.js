@@ -46,11 +46,21 @@ exports.getReservation = async (req, res) => {
 exports.getReservations = async (req, res) => {
   try {
     const currentTime = new Date();
-    console.log(req.user);
-    const filter =
-      req.user.role !== "admin"
-        ? { user: req.user.id, endTime: { $gt: currentTime } }
-        : { endTime: { $gt: currentTime } };
+
+    // Start with the base filter
+    const filter = {
+      endTime: { $gt: currentTime },
+    };
+
+    // Add user filter if not admin
+    if (req.user.role !== "admin") {
+      filter.user = req.user.id;
+    }
+
+    // Add roomId filter if provided in query or params
+    if (req.params.roomId) {
+      filter.room = req.params.roomId;
+    }
 
     const reservations = await Reservation.find(filter).populate("room");
 
@@ -70,7 +80,14 @@ exports.getReservations = async (req, res) => {
 
 exports.createReservation = async (req, res) => {
   try {
-    const { roomId, startTime, endTime, capacity } = req.body;
+    const { startTime, endTime, capacity } = req.body;
+
+    const roomId = req.body.roomId || req.params.roomId;
+    if (!roomId) {
+      return res.status(400).json({
+        message: "roomId is required"
+      });
+    }
 
     // get count of reservation where startTime is less than now
     const reservationCount = await Reservation.countDocuments({
