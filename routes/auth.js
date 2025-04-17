@@ -6,7 +6,7 @@ const { registerValidator } = require("../middleware/validator/register.validato
 const validate = require("../middleware/validator/validate.js")
 const router = express.Router();
 
-router.post("/register", register);
+router.post("/register", registerValidator, validate, register);
 router.post("/login", login);
 router.post("/logout", logout);
 
