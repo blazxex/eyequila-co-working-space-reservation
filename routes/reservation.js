@@ -19,7 +19,7 @@ const validate = require("../middleware/validator/validate.js");
 router
   .route("/")
   .get(protect, getReservations)
-  .post(protect, reservationValidator, validate, createReservation);
+  .post(protect, createReservation);
 router.get("/verify", verifyQRCode);
 router
   .route("/:reservationId")
