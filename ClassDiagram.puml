@@ -1,0 +1,90 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+package "VacQ" {
+
+    class "<<Application>>\nAucAucService" as AucAucService {}
+
+    class "<<Resource>>\nAuth" as ResourceAuth {
+        <<POST>> +register(): Token
+        <<POST>> +login(): Token
+        <<POST>> +logout(): void
+    }
+
+    class "<<Resource>>\nUsers" as ResourceUser {
+        <<GET>> +getMe(): User
+        <<PUT>> +changeProfile(): User
+    }
+
+    class "<<Resource>>\nWorkingSpaces" as ResourceSpace {
+        <<GET>> +getSpaces(): [WorkingSpace]
+        <<GET>> +getSpace(): WorkingSpace
+    }
+
+    class "<<Resource>>\nRooms" as ResourceRoom {
+        <<GET>> +getRooms(): [Room]
+        <<GET>> +getRoom(): Room
+    }
+
+    class "<<Resource>>\nReservations" as ResourceReservation {
+        <<GET>> +getReservations(): [Reservation]
+        <<POST>> +createReservation(): Reservation
+        <<GET>> +getReservation(): Reservation
+        <<PUT>> +editReservation(): Reservation
+        <<DELETE>> +cancelReservation(): void
+        <<GET>> +getReservationQR(): QRCode
+        <<GET>> +verifyQRCode(): Boolean
+    }
+
+    class "<<Representation>>\nUser" as RepresentationUser {
+        -email: String
+        -name: String
+        -phoneNumber: String
+        -firebaseUid: String
+        -role: String
+    }
+
+    class "<<Representation>>\nWorkingSpace" as RepresentationSpace {
+        -name: String
+        -address: String
+        -phoneNumber: String
+        -openTime: String
+        -closeTime: String
+        -openDays: [String]
+        -is24Hours: Boolean
+        -reservationHourLimit: Number
+    }
+
+    class "<<Representation>>\nRoom" as RepresentationRoom {
+        -name: String
+        -capacity: Number
+    }
+
+    class "<<Representation>>\nReservation" as RepresentationReservation {
+        -room: Room
+        -user: User
+        -capacity: Number
+        -startTime: Date
+        -endTime: Date
+    }
+
+    ' Application Entry Point
+    AucAucService ..> ResourceAuth : "/auth"
+    AucAucService ..> ResourceUser : "/users"
+    AucAucService ..> ResourceSpace : "/spaces"
+    AucAucService ..> ResourceRoom : "/spaces/:spaceId/rooms"
+    AucAucService ..> ResourceReservation : "/rooms/:roomId/reservation"
+
+    ' Resource -> Representation
+    ResourceUser ..> RepresentationUser : "<<use>>"
+    ResourceSpace ..> RepresentationSpace : "<<use>>"
+    ResourceRoom ..> RepresentationRoom : "<<use>>"
+    ResourceReservation ..> RepresentationReservation : "<<use>>"
+
+    ' Sub-resources
+    ResourceSpace ..> ResourceRoom : "/:spaceId/rooms"
+    ResourceRoom ..> ResourceReservation : "/:roomId/reservation"
+}
+
+@enduml
