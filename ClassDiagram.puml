@@ -84,7 +84,7 @@ package "Coworking" {
     ResourceReservation ..> RepresentationReservation : "<<use>>"
 
     ' Sub-resources
-    ResourceSpace ..> ResourceRoom : "/:spaceId/rooms\n<<path>>"
-    ResourceRoom ..> ResourceReservation : "/:roomId/reservation\n<<path>>"
+    ResourceSpace ..> ResourceRoom : "/:spaceId/rooms\n<<path>"
+    ResourceRoom ..> ResourceReservation : "/:roomId/reservation\n<<path>"
 }
 @enduml
