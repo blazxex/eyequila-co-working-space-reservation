@@ -2,9 +2,9 @@
 left to right direction
 skinparam packageStyle rectangle
 
-package "VacQ" {
+package "Coworking" {
 
-    class "<<Application>>\nAucAucService" as AucAucService {}
+    class "<<Application>>\nCoWorkingService" as CoWorkingService {}
 
     class "<<Resource>>\nAuth" as ResourceAuth {
         <<POST>> +register(): Token
@@ -70,21 +70,21 @@ package "VacQ" {
     }
 
     ' Application Entry Point
-    AucAucService ..> ResourceAuth : "/auth"
-    AucAucService ..> ResourceUser : "/users"
-    AucAucService ..> ResourceSpace : "/spaces"
-    AucAucService ..> ResourceRoom : "/spaces/:spaceId/rooms"
-    AucAucService ..> ResourceReservation : "/rooms/:roomId/reservation"
+   CoWorkingService ..> ResourceAuth : "/auth\n<<path>>"
+    CoWorkingService ..> ResourceUser : "/users\n<<path>>"
+    CoWorkingService ..> ResourceSpace : "/spaces\n<<path>>"
+    CoWorkingService ..> ResourceRoom : "/rooms\n<<path>>"
+    CoWorkingService ..> ResourceReservation : "/reservation\n<<path>>"
 
     ' Resource -> Representation
     ResourceUser ..> RepresentationUser : "<<use>>"
+    ResourceAuth ..> RepresentationUser : "<<use>>"
     ResourceSpace ..> RepresentationSpace : "<<use>>"
     ResourceRoom ..> RepresentationRoom : "<<use>>"
     ResourceReservation ..> RepresentationReservation : "<<use>>"
 
     ' Sub-resources
-    ResourceSpace ..> ResourceRoom : "/:spaceId/rooms"
-    ResourceRoom ..> ResourceReservation : "/:roomId/reservation"
+    ResourceSpace ..> ResourceRoom : "/:spaceId/rooms\n<<path>>"
+    ResourceRoom ..> ResourceReservation : "/:roomId/reservation\n<<path>>"
 }
-
 @enduml
