@@ -11,8 +11,9 @@ exports.checkReservationConstraints = async ({
 }) => {
   const startDateTime = new Date(startTime);
   const endDateTime = new Date(endTime);
+  const now = new Date();
 
-  if (startDateTime <= Date.now() || endDateTime <= Date.now()) {
+  if (startDateTime <= now || endDateTime <= now) {
     throw new Error("Can't reserve in the past");
   }
 
@@ -53,6 +54,7 @@ exports.checkReservationConstraints = async ({
     openTime.setHours(openHour, openMinute, 0, 0);
     const closeTime = new Date(startDateTime);
     closeTime.setHours(closeHour, closeMinute, 0, 0);
+    console.log(openTime, closeTime);
 
     if (startDateTime < openTime || endDateTime > closeTime) {
       throw new Error("Reservation must be within workspace hours");
