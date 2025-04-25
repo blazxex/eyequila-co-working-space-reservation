@@ -1,0 +1,90 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+package "Coworking" {
+
+    class "<<Application>>\nCoWorkingService" as CoWorkingService {}
+
+    class "<<Resource>>\nAuth" as ResourceAuth {
+        <<POST>> +register(): Token
+        <<POST>> +login(): Token
+        <<POST>> +logout(): void
+    }
+
+    class "<<Resource>>\nUsers" as ResourceUser {
+        <<GET>> +getMe(): User
+        <<PUT>> +changeProfile(): User
+    }
+
+    class "<<Resource>>\nWorkingSpaces" as ResourceSpace {
+        <<GET>> +getSpaces(): [WorkingSpace]
+        <<GET>> +getSpace(): WorkingSpace
+    }
+
+    class "<<Resource>>\nRooms" as ResourceRoom {
+        <<GET>> +getRooms(): [Room]
+        <<GET>> +getRoom(): Room
+    }
+
+    class "<<Resource>>\nReservations" as ResourceReservation {
+        <<GET>> +getReservations(): [Reservation]
+        <<POST>> +createReservation(): Reservation
+        <<GET>> +getReservation(): Reservation
+        <<PUT>> +editReservation(): Reservation
+        <<DELETE>> +cancelReservation(): void
+        <<GET>> +getReservationQR(): QRCode
+        <<GET>> +verifyQRCode(): Boolean
+    }
+
+    class "<<Representation>>\nUser" as RepresentationUser {
+        -email: String
+        -name: String
+        -phoneNumber: String
+        -firebaseUid: String
+        -role: String
+    }
+
+    class "<<Representation>>\nWorkingSpace" as RepresentationSpace {
+        -name: String
+        -address: String
+        -phoneNumber: String
+        -openTime: String
+        -closeTime: String
+        -openDays: [String]
+        -is24Hours: Boolean
+        -reservationHourLimit: Number
+    }
+
+    class "<<Representation>>\nRoom" as RepresentationRoom {
+        -name: String
+        -capacity: Number
+    }
+
+    class "<<Representation>>\nReservation" as RepresentationReservation {
+        -room: Room
+        -user: User
+        -capacity: Number
+        -startTime: Date
+        -endTime: Date
+    }
+
+    ' Application Entry Point
+   CoWorkingService ..> ResourceAuth : "/auth\n<<path>>"
+    CoWorkingService ..> ResourceUser : "/users\n<<path>>"
+    CoWorkingService ..> ResourceSpace : "/spaces\n<<path>>"
+    CoWorkingService ..> ResourceRoom : "/rooms\n<<path>>"
+    CoWorkingService ..> ResourceReservation : "/reservation\n<<path>>"
+
+    ' Resource -> Representation
+    ResourceUser ..> RepresentationUser : "<<use>>"
+    ResourceAuth ..> RepresentationUser : "<<use>>"
+    ResourceSpace ..> RepresentationSpace : "<<use>>"
+    ResourceRoom ..> RepresentationRoom : "<<use>>"
+    ResourceReservation ..> RepresentationReservation : "<<use>>"
+
+    ' Sub-resources
+    ResourceSpace ..> ResourceRoom : "/:spaceId/rooms\n<<path>"
+    ResourceRoom ..> ResourceReservation : "/:roomId/reservation\n<<path>"
+}
+@enduml
